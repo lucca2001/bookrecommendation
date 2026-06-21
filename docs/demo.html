@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>书格测评 — 你是哪种读书人？</title>
+<style>
+/* ===== CSS 变量 & 全局重置 ===== */
+:root {
+  --bg: #0f0f0f;
+  --bg-card: #1a1a1a;
+  --bg-hover: #222222;
+  --text: #f5f0e8;
+  --text-muted: #8a8070;
+  --accent: #e8c547;
+  --accent-dim: rgba(232,197,71,0.15);
+  --accent-glow: rgba(232,197,71,0.35);
+  --border: #2a2a2a;
+  --border-accent: rgba(232,197,71,0.6);
+  --font-serif: Georgia, 'Noto Serif SC', '宋体', serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --transition: 0.35s cubic-bezier(0.4,0,0.2,1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.7;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* ===== 书页纹理背景 ===== */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 28px,
+      rgba(245,240,232,0.018) 28px,
+      rgba(245,240,232,0.018) 29px
+    );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ===== 屏幕容器 ===== */
+.screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(30px);
+  transition: opacity 0.55s ease, transform 0.55s ease;
+  z-index: 1;
+  overflow-y: auto;
+}
+
+.screen.active {
+  opacity: 1;
+  pointer-events: all;
+  transform: translateY(0);
+}
+
+.screen.exit {
+  opacity: 0;
+  transform: translateY(-30px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+/* ===== 通用组件 ===== */
+.btn {
+  display: inline-block;
+  padding: 14px 40px;
+  border: 1.5px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: background var(--transition), box-shadow var(--transition);
+  text-transform: none;
+}
+
+.btn:hover {
+  background: var(--accent-dim);
+  box-shadow: 0 0 24px var(--accent-glow), 0 0 6px var(--accent-glow);
+}
+
+.btn:active { transform: scale(0.98); }
+
+.label-small {
+  font-size: 12px;
+  letter-spacing: 0.15em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+/* ===== 进度条 ===== */
+.progress-bar-wrap {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--border);
+  z-index: 100;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.5s ease;
+}
+
+/* ================================================
+   SCREEN 0: LANDING
+   ================================================ */
+#screen-landing {
+  text-align: center;
+  gap: 0;
+}
+
+.landing-eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  color: var(--text-muted);
+  margin-bottom: 28px;
+  text-transform: uppercase;
+}
+
+.landing-title {
+  font-family: var(--font-serif);
+  font-size: clamp(52px, 10vw, 108px);
+  font-weight: normal;
+  color: var(--text);
+  line-height: 1.05;
+  margin-bottom: 24px;
+  letter-spacing: -0.02em;
+}
+
+.landing-title span {
+  color: var(--accent);
+}
+
+.landing-subtitle {
+  font-size: clamp(15px, 2.5vw, 18px);
+  color: var(--text-muted);
+  margin-bottom: 52px;
+  max-width: 420px;
+}
+
+.landing-meta {
+  margin-top: 28px;
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+.landing-meta span {
+  margin: 0 8px;
+}
+
+/* ================================================
+   SCREEN 1: INTRO STORY
+   ================================================ */
+#screen-intro {
+  gap: 0;
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.story-container {
+  width: 100%;
+  min-height: 340px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+}
+
+.story-line {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+  margin-bottom: 32px;
+}
+
+.story-line.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.story-line p {
+  font-family: var(--font-serif);
+  font-size: clamp(22px, 4vw, 34px);
+  font-weight: normal;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.story-line.accent p {
+  color: var(--accent);
+  font-size: clamp(26px, 5vw, 42px);
+}
+
+.story-line.muted p {
+  color: var(--text-muted);
+  font-size: clamp(18px, 3vw, 26px);
+}
+
+.intro-action {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.6s ease 0.3s, transform 0.6s ease 0.3s;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.intro-action.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ================================================
+   SCREEN 2 & 3: QUIZ
+   ================================================ */
+#screen-quiz-1, #screen-quiz-2 {
+  max-width: 760px;
+  width: 100%;
+  margin: 0 auto;
+  gap: 0;
+  padding-top: 60px;
+}
+
+.quiz-meta {
+  font-size: 12px;
+  letter-spacing: 0.15em;
+  color: var(--text-muted);
+  margin-bottom: 36px;
+  text-transform: uppercase;
+}
+
+.quiz-question {
+  font-family: var(--font-serif);
+  font-size: clamp(22px, 4vw, 32px);
+  font-weight: normal;
+  color: var(--text);
+  line-height: 1.4;
+  margin-bottom: 44px;
+  max-width: 600px;
+}
+
+/* 二选一卡片 */
+.choice-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  width: 100%;
+  max-width: 680px;
+}
+
+.choice-card {
+  padding: 32px 28px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition), box-shadow var(--transition);
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+}
+
+.choice-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--accent-dim);
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+
+.choice-card:hover {
+  border-color: var(--border-accent);
+  box-shadow: 0 0 20px rgba(232,197,71,0.12);
+}
+
+.choice-card:hover::before { opacity: 1; }
+
+.choice-card.selected {
+  border-color: var(--accent);
+  background: var(--bg-hover);
+  box-shadow: 0 0 32px rgba(232,197,71,0.2);
+}
+
+.choice-card.selected::before { opacity: 1; }
+
+.choice-card p {
+  font-family: var(--font-serif);
+  font-size: clamp(16px, 2.5vw, 20px);
+  color: var(--text);
+  line-height: 1.5;
+  position: relative;
+  z-index: 1;
+}
+
+.choice-hint {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  position: relative;
+  z-index: 1;
+}
+
+/* 单选列表 */
+.option-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 560px;
+}
+
+.option-item {
+  padding: 20px 28px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition), transform var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.option-item::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--accent-dim);
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+
+.option-item:hover {
+  border-color: var(--border-accent);
+  transform: translateX(4px);
+}
+
+.option-item:hover::after { opacity: 1; }
+
+.option-item.selected {
+  border-color: var(--accent);
+  transform: translateX(4px);
+}
+
+.option-item.selected::after { opacity: 1; }
+
+.option-dot {
+  width: 8px;
+  height: 8px;
+  border: 1.5px solid var(--text-muted);
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: border-color var(--transition), background var(--transition);
+  position: relative;
+  z-index: 1;
+}
+
+.option-item:hover .option-dot,
+.option-item.selected .option-dot {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.option-item p {
+  font-size: clamp(15px, 2vw, 17px);
+  color: var(--text);
+  line-height: 1.4;
+  position: relative;
+  z-index: 1;
+}
+
+/* 计算过渡 */
+.calculating-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.calculating-overlay.show {
+  display: flex;
+  animation: fadeIn 0.4s ease forwards;
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.calc-text {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  color: var(--text-muted);
+}
+
+.calc-axes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 280px;
+}
+
+.calc-axis-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  opacity: 0;
+  animation: axisReveal 0.4s ease forwards;
+}
+
+.calc-axis-row:nth-child(1) { animation-delay: 0.1s; }
+.calc-axis-row:nth-child(2) { animation-delay: 0.25s; }
+.calc-axis-row:nth-child(3) { animation-delay: 0.4s; }
+.calc-axis-row:nth-child(4) { animation-delay: 0.55s; }
+.calc-axis-row:nth-child(5) { animation-delay: 0.7s; }
+.calc-axis-row:nth-child(6) { animation-delay: 0.85s; }
+.calc-axis-row:nth-child(7) { animation-delay: 1.0s; }
+.calc-axis-row:nth-child(8) { animation-delay: 1.15s; }
+.calc-axis-row:nth-child(9) { animation-delay: 1.3s; }
+.calc-axis-row:nth-child(10) { animation-delay: 1.45s; }
+
+@keyframes axisReveal {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.calc-axis-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  width: 60px;
+  flex-shrink: 0;
+}
+
+.calc-axis-bar {
+  flex: 1;
+  height: 2px;
+  background: var(--border);
+  position: relative;
+  overflow: hidden;
+}
+
+.calc-axis-bar-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: var(--accent);
+  animation: barGrow 0.6s ease forwards;
+  animation-delay: inherit;
+  width: 0%;
+}
+
+/* ================================================
+   SCREEN 4: RESULT
+   ================================================ */
+#screen-result {
+  max-width: 800px;
+  width: 100%;
+  margin: 0 auto;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding-top: 80px;
+  padding-bottom: 80px;
+}
+
+.result-inner {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* 书格揭晓 */
+.result-label {
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  opacity: 0;
+  animation: fadeUp 0.6s ease 0.2s forwards;
+}
+
+.result-name {
+  font-family: var(--font-serif);
+  font-size: clamp(42px, 8vw, 80px);
+  font-weight: normal;
+  color: var(--accent);
+  line-height: 1.1;
+  margin-bottom: 40px;
+  opacity: 0;
+  transform: scale(0.85);
+  animation: nameReveal 0.7s cubic-bezier(0.16,1,0.3,1) 0.5s forwards;
+}
+
+@keyframes nameReveal {
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 人格描述 */
+.result-desc {
+  margin-bottom: 52px;
+  opacity: 0;
+  animation: fadeUp 0.6s ease 0.9s forwards;
+}
+
+.result-desc p {
+  font-family: var(--font-serif);
+  font-size: clamp(17px, 2.5vw, 22px);
+  color: var(--text);
+  line-height: 1.7;
+  margin-bottom: 4px;
+}
+
+.result-desc p:last-child { color: var(--text-muted); font-size: clamp(14px, 2vw, 17px); }
+
+/* 两栏布局：雷达图 + 特征 */
+.result-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  margin-bottom: 52px;
+  opacity: 0;
+  animation: fadeUp 0.6s ease 1.2s forwards;
+}
+
+/* 雷达图 */
+.radar-section h3,
+.traits-section h3,
+.books-section h3 {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+#radar-svg {
+  width: 100%;
+  max-width: 280px;
+  height: auto;
+}
+
+/* 特征列表 */
+.traits-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 4px;
+}
+
+.trait-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.trait-icon {
+  color: var(--accent);
+  font-size: 14px;
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+.trait-item p {
+  font-size: 15px;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+/* 书单 */
+.books-section {
+  margin-bottom: 48px;
+  opacity: 0;
+  animation: fadeUp 0.6s ease 1.5s forwards;
+}
+
+.book-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.book-card {
+  padding: 20px 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: border-color var(--transition);
+  position: relative;
+}
+
+.book-card:hover { border-color: var(--border-accent); }
+
+.book-card.surprise {
+  border-left: 3px solid var(--accent);
+}
+
+.book-tag {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-size: 11px;
+  color: var(--accent);
+  letter-spacing: 0.08em;
+  background: var(--accent-dim);
+  padding: 3px 8px;
+  border: 1px solid var(--border-accent);
+}
+
+.book-title {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+.book-author {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.book-reason {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 6px;
+  font-style: italic;
+}
+
+.book-reason::before { content: '「'; }
+.book-reason::after { content: '」'; }
+
+/* 分享区域 */
+.result-actions {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  opacity: 0;
+  animation: fadeUp 0.6s ease 1.8s forwards;
+}
+
+.btn-secondary {
+  padding: 14px 32px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color var(--transition), color var(--transition);
+}
+
+.btn-secondary:hover {
+  border-color: var(--text-muted);
+  color: var(--text);
+}
+
+/* ================================================
+   RADAR CHART SVG STYLES
+   ================================================ */
+.radar-bg-polygon { fill: rgba(232,197,71,0.04); stroke: rgba(232,197,71,0.12); stroke-width: 0.5; }
+.radar-data-polygon { fill: rgba(232,197,71,0.15); stroke: var(--accent); stroke-width: 1.5; }
+.radar-axis-line { stroke: rgba(245,240,232,0.1); stroke-width: 0.8; }
+.radar-label { fill: var(--text-muted); font-size: 9.5px; font-family: sans-serif; }
+.radar-label-val { fill: var(--accent); font-size: 8.5px; font-family: sans-serif; font-weight: bold; }
+.radar-dot { fill: var(--accent); }
+
+/* ================================================
+   响应式
+   ================================================ */
+@media (max-width: 640px) {
+  .choice-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .result-columns {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  #radar-svg {
+    max-width: 240px;
+    margin: 0 auto;
+    display: block;
+  }
+
+  .landing-title {
+    font-size: 52px;
+  }
+}
+
+/* ================================================
+   滚动条美化
+   ================================================ */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- ===== 进度条 ===== -->
+<div class="progress-bar-wrap" id="progress-wrap" style="display:none">
+  <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+</div>
+
+<!-- ===== 计算过渡遮罩 ===== -->
+<div class="calculating-overlay" id="calc-overlay">
+  <div class="calc-text">正在分析你的书格……</div>
+  <div class="calc-axes">
+    <div class="calc-axis-row"><span class="calc-axis-label">探索欲</span><div class="calc-axis-bar"><div class="calc-axis-bar-fill" style="width:82%"></div></div></div>
+    <div class="calc-axis-row"><span class="calc-axis-label">精读深度</span><div class="calc-axis-bar"><div class="calc-axis-bar-fill" style="width:61%"></div></div></div>
+    <div class="calc-axis-row"><span class="calc-axis-label">历史纵深</span><div class="calc-axis-bar"><div class="calc-axis-bar-fill" style="width:88%"></div></div></div>
+    <div class="calc-axis-row"><span class="calc-axis-label">系统思维</span><div class="calc-axis-bar"><div class="calc-axis-bar-fill" style="width:75%"></div></div></div>
+    <div class="calc-axis-row"><span class="calc-axis-label">西方视野</span><div class="calc-axis-bar"><div class="calc-axis-bar-fill" style="width:70%"></div></div></div>
+    <div class="calc-axis-row"><span class="calc-axis-label">严肃度</span><div class="calc-axis-bar"><div class="calc-axis-bar-fill" style="width:80%"></div></div></div>
+    <div class="calc-axis-row"><span class="calc-axis-label">批判精神</span><div class="calc-axis-bar"><div class="calc-axis-bar-fill" style="width:72%"></div></div></div>
+    <div class="calc-axis-row"><span class="calc-axis-label">规律节奏</span><div class="calc-axis-bar"><div class="calc-axis-bar-fill" style="width:45%"></div></div></div>
+    <div class="calc-axis-row"><span class="calc-axis-label">独享偏好</span><div class="calc-axis-bar"><div class="calc-axis-bar-fill" style="width:68%"></div></div></div>
+    <div class="calc-axis-row"><span class="calc-axis-label">求知驱动</span><div class="calc-axis-bar"><div class="calc-axis-bar-fill" style="width:85%"></div></div></div>
+  </div>
+</div>
+
+<!-- ===========================
+     SCREEN 0: LANDING
+     =========================== -->
+<section class="screen active" id="screen-landing">
+  <p class="landing-eyebrow">书格测评 · Beta</p>
+  <h1 class="landing-title">你是哪种<span>书格</span>？</h1>
+  <p class="landing-subtitle">16种阅读人格，总有一种说的是你</p>
+  <button class="btn" onclick="goToIntro()">开始测试 →</button>
+  <p class="landing-meta">
+    <span>约5分钟</span>·
+    <span>20题</span>·
+    <span>不需要注册</span>
+  </p>
+</section>
+
+<!-- ===========================
+     SCREEN 1: INTRO STORY
+     =========================== -->
+<section class="screen" id="screen-intro">
+  <div class="story-container">
+    <div class="story-line" id="s1">
+      <p>每个人读书的方式，</p>
+      <p>其实大相径庭。</p>
+    </div>
+    <div class="story-line muted" id="s2">
+      <p>有人买书如山倒，书架永远比时间多。</p>
+    </div>
+    <div class="story-line muted" id="s3">
+      <p>有人一本书读八年，</p>
+      <p>《存在与时间》第一章已经读了十遍。</p>
+    </div>
+    <div class="story-line accent" id="s4">
+      <p>这不是坏习惯。</p>
+      <p>这是你的书格。</p>
+    </div>
+    <div class="intro-action" id="intro-action">
+      <button class="btn" onclick="goToQuiz1()">找到我的书格 →</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===========================
+     SCREEN 2: QUIZ Q1
+     =========================== -->
+<section class="screen" id="screen-quiz-1">
+  <p class="quiz-meta">第 3 题 / 20</p>
+  <h2 class="quiz-question">周末，你拿起一本书。<br>你更可能在想：</h2>
+  <div class="choice-grid">
+    <div class="choice-card" id="choice-a" onclick="selectChoice('a')">
+      <p>「这本书能让我学到什么？」</p>
+      <p class="choice-hint">学点有用的</p>
+    </div>
+    <div class="choice-card" id="choice-b" onclick="selectChoice('b')">
+      <p>「我只是想消失一下。」</p>
+      <p class="choice-hint">逃进另一个世界</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===========================
+     SCREEN 3: QUIZ Q2
+     =========================== -->
+<section class="screen" id="screen-quiz-2">
+  <p class="quiz-meta">第 7 题 / 20</p>
+  <h2 class="quiz-question">诚实回答：你现在同时在「读」几本书？</h2>
+  <div class="option-list">
+    <div class="option-item" onclick="selectOption(this, 1)">
+      <div class="option-dot"></div>
+      <p>1本（我是正常人）</p>
+    </div>
+    <div class="option-item" onclick="selectOption(this, 2)">
+      <div class="option-dot"></div>
+      <p>2–3本（还好还好）</p>
+    </div>
+    <div class="option-item" onclick="selectOption(this, 3)">
+      <div class="option-dot"></div>
+      <p>4–6本（有点失控了）</p>
+    </div>
+    <div class="option-item" onclick="selectOption(this, 4)">
+      <div class="option-dot"></div>
+      <p>7本以上（书架是我的精神支柱）</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===========================
+     SCREEN 4: RESULT
+     =========================== -->
+<section class="screen" id="screen-result">
+  <div class="result-inner">
+
+    <!-- 书格揭晓 -->
+    <p class="result-label">你的书格是</p>
+    <h2 class="result-name">「顺着书找书型」</h2>
+
+    <!-- 描述 -->
+    <div class="result-desc">
+      <p>你不只是在读书，你在挖一条地道。</p>
+      <p>一本书的参考文献，是你下一本书的书单。</p>
+      <p>你的豆瓣想读列表，是一棵树，不是一个队列。</p>
+    </div>
+
+    <!-- 两栏：雷达图 + 特征 -->
+    <div class="result-columns">
+      <div class="radar-section">
+        <h3>阅读基因图谱</h3>
+        <!-- 雷达图将由JS生成 -->
+        <svg id="radar-svg" viewBox="0 0 280 280" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+      <div class="traits-section">
+        <h3>你的书格特征</h3>
+        <div class="traits-list">
+          <div class="trait-item">
+            <span class="trait-icon">✦</span>
+            <p>买书不看书名，看参考文献</p>
+          </div>
+          <div class="trait-item">
+            <span class="trait-icon">✦</span>
+            <p>能接受读了100页才进入状态的书</p>
+          </div>
+          <div class="trait-item">
+            <span class="trait-icon">✦</span>
+            <p>豆瓣「想读」列表是你最私密的东西</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 书单 -->
+    <div class="books-section">
+      <h3>为你精选的书</h3>
+      <div class="book-cards">
+        <div class="book-card">
+          <span class="book-title">《枪炮、病菌与钢铁》</span>
+          <span class="book-author">贾雷德·戴蒙德</span>
+          <p class="book-reason">读完你会想把地理学从头学一遍</p>
+        </div>
+        <div class="book-card">
+          <span class="book-title">《人类简史》</span>
+          <span class="book-author">尤瓦尔·赫拉利</span>
+          <p class="book-reason">每个参考文献都是一个新世界</p>
+        </div>
+        <div class="book-card surprise">
+          <div class="book-tag">💡 你可能没想到</div>
+          <span class="book-title">《东京奇谭集》</span>
+          <span class="book-author">村上春树</span>
+          <p class="book-reason">你的逻辑脑偶尔需要放一天假</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 操作 -->
+    <div class="result-actions">
+      <button class="btn" id="share-btn" onclick="copyBookgrid()">复制我的书格</button>
+      <button class="btn-secondary" onclick="restartQuiz()">重新测试</button>
+    </div>
+
+  </div>
+</section>
+
+<script>
+/* ================================================
+   屏幕管理
+   ================================================ */
+let currentScreen = 'screen-landing';
+
+function showScreen(id) {
+  const current = document.getElementById(currentScreen);
+  const next = document.getElementById(id);
+  if (!next || current === next) return;
+
+  current.classList.add('exit');
+  setTimeout(() => {
+    current.classList.remove('active', 'exit');
+    next.classList.add('active');
+    currentScreen = id;
+    // 滚回顶部
+    next.scrollTop = 0;
+  }, 380);
+}
+
+/* ================================================
+   进度条
+   ================================================ */
+function setProgress(pct) {
+  const wrap = document.getElementById('progress-wrap');
+  const fill = document.getElementById('progress-fill');
+  wrap.style.display = pct > 0 ? 'block' : 'none';
+  fill.style.width = pct + '%';
+}
+
+/* ================================================
+   LANDING → INTRO
+   ================================================ */
+function goToIntro() {
+  showScreen('screen-intro');
+  // 依次显示故事文字
+  const delays = [200, 900, 1700, 2500, 3200];
+  const ids = ['s1','s2','s3','s4','intro-action'];
+  ids.forEach((id, i) => {
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('visible');
+    }, delays[i]);
+  });
+}
+
+/* ================================================
+   INTRO → QUIZ 1
+   ================================================ */
+function goToQuiz1() {
+  setProgress(15);
+  showScreen('screen-quiz-1');
+}
+
+/* ================================================
+   QUIZ 1：二选一
+   ================================================ */
+function selectChoice(choice) {
+  const a = document.getElementById('choice-a');
+  const b = document.getElementById('choice-b');
+  a.classList.remove('selected');
+  b.classList.remove('selected');
+  document.getElementById('choice-' + choice).classList.add('selected');
+
+  setProgress(30);
+  setTimeout(() => {
+    showScreen('screen-quiz-2');
+    setProgress(60);
+  }, 500);
+}
+
+/* ================================================
+   QUIZ 2：单选 → 计算 → 结果
+   ================================================ */
+function selectOption(el, val) {
+  // 清除其他选中
+  document.querySelectorAll('.option-item').forEach(i => i.classList.remove('selected'));
+  el.classList.add('selected');
+
+  setProgress(85);
+
+  // 显示计算遮罩
+  setTimeout(() => {
+    const overlay = document.getElementById('calc-overlay');
+    overlay.classList.add('show');
+
+    // 重置并重跑 bar 动画
+    overlay.querySelectorAll('.calc-axis-bar-fill').forEach(bar => {
+      const w = bar.style.width;
+      bar.style.width = '0%';
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => { bar.style.width = w; });
+      });
+    });
+
+    // 2.8秒后跳结果
+    setTimeout(() => {
+      overlay.classList.remove('show');
+      setProgress(100);
+      showScreen('screen-result');
+      // 重置进度条
+      setTimeout(() => setProgress(0), 800);
+      // 绘制雷达图
+      drawRadar();
+    }, 2800);
+  }, 400);
+}
+
+/* ================================================
+   雷达图（纯SVG手绘）
+   ================================================ */
+function drawRadar() {
+  const svg = document.getElementById('radar-svg');
+  if (!svg || svg.dataset.drawn) return;
+  svg.dataset.drawn = '1';
+
+  const cx = 140, cy = 140, R = 108;
+  const axes = [
+    { label: '探索欲', val: 82 },
+    { label: '求知', val: 85 },
+    { label: '精读', val: 61 },
+    { label: '历史', val: 88 },
+    { label: '系统', val: 75 },
+    { label: '西方', val: 70 },
+    { label: '严肃', val: 80 },
+    { label: '批判', val: 72 },
+    { label: '节奏', val: 45 },
+    { label: '独享', val: 68 },
+  ];
+  const n = axes.length;
+
+  function angleOf(i) { return (Math.PI * 2 * i / n) - Math.PI / 2; }
+  function pt(i, r) {
+    const a = angleOf(i);
+    return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+  }
+  function ptStr(i, r) { const [x,y] = pt(i, r); return `${x},${y}`; }
+
+  let html = '';
+
+  // 背景网格（3层）
+  [0.33, 0.66, 1.0].forEach(frac => {
+    const points = axes.map((_, i) => ptStr(i, R * frac)).join(' ');
+    html += `<polygon class="radar-bg-polygon" points="${points}"/>`;
+  });
+
+  // 轴线
+  axes.forEach((_, i) => {
+    const [x, y] = pt(i, R);
+    html += `<line class="radar-axis-line" x1="${cx}" y1="${cy}" x2="${x}" y2="${y}"/>`;
+  });
+
+  // 数据多边形
+  const dataPoints = axes.map((ax, i) => ptStr(i, R * ax.val / 100)).join(' ');
+  html += `<polygon class="radar-data-polygon" points="${dataPoints}"/>`;
+
+  // 数据点
+  axes.forEach((ax, i) => {
+    const [x, y] = pt(i, R * ax.val / 100);
+    html += `<circle class="radar-dot" cx="${x}" cy="${y}" r="3"/>`;
+  });
+
+  // 标签
+  axes.forEach((ax, i) => {
+    const [lx, ly] = pt(i, R + 18);
+    const [vx, vy] = pt(i, R * ax.val / 100 - 14);
+    const anchor = lx < cx - 5 ? 'end' : lx > cx + 5 ? 'start' : 'middle';
+    html += `<text class="radar-label" x="${lx}" y="${ly+4}" text-anchor="${anchor}">${ax.label}</text>`;
+    html += `<text class="radar-label-val" x="${vx}" y="${vy+3}" text-anchor="middle">${ax.val}</text>`;
+  });
+
+  svg.innerHTML = html;
+}
+
+/* ================================================
+   分享 & 重置
+   ================================================ */
+function copyBookgrid() {
+  const text = '我的书格是「顺着书找书型」\n一本书的参考文献，是下一本的书单。\n测测你的书格 → https://shu-ge.vercel.app';
+  try {
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('share-btn');
+      btn.textContent = '已复制！✓';
+      btn.style.borderColor = '#6bcb77';
+      btn.style.color = '#6bcb77';
+      setTimeout(() => {
+        btn.textContent = '复制我的书格';
+        btn.style.borderColor = '';
+        btn.style.color = '';
+      }, 2000);
+    });
+  } catch(e) {
+    alert('复制内容：' + text);
+  }
+}
+
+function restartQuiz() {
+  // 重置问卷状态
+  document.querySelectorAll('.choice-card').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('.option-item').forEach(c => c.classList.remove('selected'));
+  setProgress(0);
+  showScreen('screen-landing');
+}
+
+/* ================================================
+   键盘快捷键
+   ================================================ */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') restartQuiz();
+});
+</script>
+</body>
+</html>
