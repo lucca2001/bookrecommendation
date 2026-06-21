@@ -97,7 +97,7 @@ function dominantAxis(vector: AxisVector) {
 
 /**
  * 推荐主入口：给定用户向量，产出书格 + 推荐书单。
- * @param userVector 用户 10 维向量
+ * @param userVector 用户 6 维向量
  * @param books      书库（默认全量 BOOKS，便于测试注入）
  */
 export function recommend(

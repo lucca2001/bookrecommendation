@@ -204,6 +204,7 @@ export default function QuizApp({ questions, total, gridList }: QuizAppProps) {
           <QuestionView
             key={currentQuestion.id}
             question={currentQuestion}
+            total={total}
             onAnswer={handleAnswer}
           />
         )}

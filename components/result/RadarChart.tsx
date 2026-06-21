@@ -2,7 +2,7 @@
 /**
  * 阅读基因图谱（纯 SVG 雷达图）
  * 几何参数与 docs/demo.html drawRadar() 完全一致：cx=140 cy=140 R=108。
- * 10 个轴使用 data/axes.ts 的 radarLabel，数值取用户向量。
+ * 6 个轴使用 data/axes.ts 的 radarLabel，数值取用户向量。
  */
 import type { AxisVector } from "@/types";
 import { AXES } from "@/data/axes";

@@ -858,3 +858,110 @@ a {
     display: block;
   }
 }
+
+/* ===== 6 维重构新增题型样式 ===== */
+
+/* 题型引导语 */
+.quiz-intro {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-muted);
+  margin-bottom: 18px;
+  max-width: 600px;
+}
+
+/* 文本品味题：两段文字 */
+.taste-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  width: 100%;
+  max-width: 760px;
+}
+.taste-card {
+  padding: 28px 26px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  cursor: pointer;
+  transition: border-color 0.35s, background 0.35s, box-shadow 0.35s,
+    transform 0.35s;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.taste-card:hover {
+  border-color: var(--border-accent);
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px rgba(232, 197, 71, 0.12);
+}
+.taste-card.selected {
+  border-color: var(--accent);
+  background: var(--bg-hover);
+  box-shadow: 0 0 32px rgba(232, 197, 71, 0.2);
+}
+.taste-passage {
+  font-family: Georgia, "Noto Serif SC", "宋体", serif;
+  font-size: clamp(15px, 2.2vw, 18px);
+  line-height: 1.85;
+  color: var(--text);
+  white-space: pre-wrap;
+}
+.taste-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-top: auto;
+  border-top: 1px dashed var(--border);
+  padding-top: 12px;
+}
+.taste-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.taste-source {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+  text-align: right;
+}
+
+/* 最近读过的三本书 */
+.books-wrap {
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.books-input {
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  color: var(--text);
+  font-family: Georgia, "Noto Serif SC", "宋体", serif;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.books-input::placeholder {
+  color: var(--text-muted);
+}
+.books-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 16px rgba(232, 197, 71, 0.14);
+}
+.books-wrap .slider-confirm {
+  align-self: flex-start;
+  margin-top: 4px;
+}
+
+@media (max-width: 720px) {
+  .taste-grid {
+    grid-template-columns: 1fr;
+  }
+}

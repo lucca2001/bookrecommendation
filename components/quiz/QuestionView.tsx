@@ -1,10 +1,11 @@
 "use client";
 /**
- * 单题渲染器：根据 question.type 渲染 4 种题型
+ * 单题渲染器：根据 question.type 渲染 5 种题型
  *   choice — 二选一卡片（点击即选并自动前进）
+ *   taste  — 文本品味题：两段不同文风的文字，点选更吸引你的那一段（点击即选并自动前进）
  *   fun    — 单选列表（点击即选并自动前进）
- *   image  — 封面直觉 2×2（点击即选并自动前进）
- *   slider — 滑块 + 确认按钮（需手动确认，因无"下一题"按钮约定）
+ *   slider — 滑块 + 确认按钮（需手动确认）
+ *   books  — 最近读过的三本书：三个文本框 + 确认（可留空）
  * 选择后通过 onAnswer 回调上报，由父组件推进。
  */
 import { useState } from "react";
@@ -12,16 +13,16 @@ import type { Question, QuizAnswer } from "@/types";
 
 interface QuestionViewProps {
   question: Question;
+  total: number;
   onAnswer: (answer: QuizAnswer) => void;
 }
 
-const IMAGE_COVER_CLASS = ["image-cover-a", "image-cover-b", "image-cover-c", "image-cover-d"];
-
-export default function QuestionView({ question, onAnswer }: QuestionViewProps) {
+export default function QuestionView({ question, total, onAnswer }: QuestionViewProps) {
   const [selected, setSelected] = useState<string | null>(null);
   const [sliderValue, setSliderValue] = useState<number>(
     question.slider?.defaultValue ?? 50
   );
+  const [bookInputs, setBookInputs] = useState<string[]>(["", "", ""]);
 
   const pickOption = (optionId: string) => {
     if (selected) return; // 防止重复点击
@@ -34,14 +35,23 @@ export default function QuestionView({ question, onAnswer }: QuestionViewProps) 
     onAnswer({ questionId: question.id, sliderValue });
   };
 
+  const confirmBooks = () => {
+    const books = bookInputs.map((b) => b.trim()).filter((b) => b.length > 0);
+    onAnswer({ questionId: question.id, books });
+  };
+
   // 题干支持 \n 换行
   const questionLines = question.text.split("\n");
 
   return (
     <>
       <p className="quiz-meta">
-        第 {question.orderIndex} 题 / 20
+        第 {question.orderIndex} 题 / {total}
       </p>
+
+      {/* 题型小引子（可选） */}
+      {question.intro && <p className="quiz-intro">{question.intro}</p>}
+
       <h2 className="quiz-question">
         {questionLines.map((line, i) => (
           <span key={i}>
@@ -67,6 +77,25 @@ export default function QuestionView({ question, onAnswer }: QuestionViewProps) 
         </div>
       )}
 
+      {/* taste 文本品味：两段文字 */}
+      {question.type === "taste" && (
+        <div className="taste-grid">
+          {question.options?.map((opt) => (
+            <div
+              key={opt.id}
+              className={`taste-card${selected === opt.id ? " selected" : ""}`}
+              onClick={() => pickOption(opt.id)}
+            >
+              <p className="taste-passage">{opt.label}</p>
+              <div className="taste-foot">
+                {opt.hint && <span className="taste-hint">{opt.hint}</span>}
+                {opt.source && <span className="taste-source">{opt.source}</span>}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* fun 单选列表 */}
       {question.type === "fun" && (
         <div className="option-list">
@@ -78,25 +107,6 @@ export default function QuestionView({ question, onAnswer }: QuestionViewProps) 
             >
               <div className="option-dot" />
               <p>{opt.label}</p>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* image 封面直觉 */}
-      {question.type === "image" && (
-        <div className="image-grid">
-          {question.options?.map((opt, i) => (
-            <div
-              key={opt.id}
-              className={`image-card${selected === opt.id ? " selected" : ""}`}
-              onClick={() => pickOption(opt.id)}
-            >
-              <div className={`image-cover ${IMAGE_COVER_CLASS[i % 4]}`}>书</div>
-              <div className="image-caption">
-                <p>{opt.label}</p>
-                {opt.hint && <p className="choice-hint">{opt.hint}</p>}
-              </div>
             </div>
           ))}
         </div>
@@ -119,6 +129,31 @@ export default function QuestionView({ question, onAnswer }: QuestionViewProps) 
           />
           <button className="btn-primary slider-confirm" onClick={confirmSlider}>
             确定 →
+          </button>
+        </div>
+      )}
+
+      {/* books 最近读过的三本书 */}
+      {question.type === "books" && (
+        <div className="books-wrap">
+          {[0, 1, 2].map((i) => (
+            <input
+              key={i}
+              className="books-input"
+              type="text"
+              placeholder={`第 ${i + 1} 本（可留空）`}
+              value={bookInputs[i]}
+              onChange={(e) =>
+                setBookInputs((prev) => {
+                  const next = [...prev];
+                  next[i] = e.target.value;
+                  return next;
+                })
+              }
+            />
+          ))}
+          <button className="btn-primary slider-confirm" onClick={confirmBooks}>
+            填好了 →
           </button>
         </div>
       )}
